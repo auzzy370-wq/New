@@ -210,6 +210,94 @@ export class StripeService {
     return this.client.subscriptions.retrieve(subscriptionId);
   }
 
+  // ── Setup Intents ──────────────────────────────────────────────────────────────
+
+  async createSetupIntent(params: {
+    customerId: string;
+    idempotencyKey?: string;
+  }): Promise<Stripe.SetupIntent> {
+    return this.client.setupIntents.create(
+      {
+        customer: params.customerId,
+        payment_method_types: ['card'],
+        usage: 'off_session',
+      },
+      params.idempotencyKey ? { idempotencyKey: params.idempotencyKey } : {},
+    );
+  }
+
+  async attachPaymentMethod(paymentMethodId: string, customerId: string): Promise<Stripe.PaymentMethod> {
+    return this.client.paymentMethods.attach(paymentMethodId, { customer: customerId });
+  }
+
+  async setDefaultPaymentMethod(customerId: string, paymentMethodId: string): Promise<Stripe.Customer> {
+    return this.client.customers.update(customerId, {
+      invoice_settings: { default_payment_method: paymentMethodId },
+    }) as Promise<Stripe.Customer>;
+  }
+
+  async updateSubscriptionPaymentMethod(
+    subscriptionId: string,
+    paymentMethodId: string,
+  ): Promise<Stripe.Subscription> {
+    return this.client.subscriptions.update(subscriptionId, {
+      default_payment_method: paymentMethodId,
+    });
+  }
+
+  async listPaymentMethods(customerId: string): Promise<Stripe.PaymentMethod[]> {
+    const result = await this.client.paymentMethods.list({
+      customer: customerId,
+      type: 'card',
+    });
+    return result.data;
+  }
+
+  // ── Billing Portal ──────────────────────────────────────────────────────────
+
+  async createBillingPortalSession(params: {
+    customerId: string;
+    returnUrl: string;
+  }): Promise<Stripe.BillingPortal.Session> {
+    return this.client.billingPortal.sessions.create({
+      customer: params.customerId,
+      return_url: params.returnUrl,
+    });
+  }
+
+  // ── Subscription Management ──────────────────────────────────────────────────
+
+  async resumeSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+    return this.client.subscriptions.resume(subscriptionId, {
+      billing_cycle_anchor: 'now',
+    });
+  }
+
+  async updateSubscription(subscriptionId: string, params: Stripe.SubscriptionUpdateParams): Promise<Stripe.Subscription> {
+    return this.client.subscriptions.update(subscriptionId, params);
+  }
+
+  async createSubscriptionWithPaymentMethod(params: {
+    customerId: string;
+    priceId: string;
+    paymentMethodId: string;
+    trialPeriodDays?: number;
+    idempotencyKey: string;
+    metadata?: Record<string, string>;
+  }): Promise<Stripe.Subscription> {
+    return this.client.subscriptions.create(
+      {
+        customer: params.customerId,
+        items: [{ price: params.priceId }],
+        default_payment_method: params.paymentMethodId,
+        trial_period_days: params.trialPeriodDays,
+        metadata: params.metadata || {},
+        expand: ['latest_invoice.payment_intent'],
+      },
+      { idempotencyKey: params.idempotencyKey },
+    );
+  }
+
   // ── Webhooks ──────────────────────────────────────────────────────────────────
 
   constructWebhookEvent(

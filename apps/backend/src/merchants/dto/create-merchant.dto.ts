@@ -71,4 +71,14 @@ export class CreateMerchantDto {
   @IsOptional()
   @IsString()
   timezone?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  businessCategory?: string;
 }

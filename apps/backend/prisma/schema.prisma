@@ -269,6 +269,8 @@ model Merchant {
   website                   String?
   logoUrl                   String?        @map("logo_url")
   businessType              String?        @map("business_type")
+  businessCategory          String?        @map("business_category")
+  description               String?
   taxId                     String?        @map("tax_id")
   status                    MerchantStatus @default(ONBOARDING)
   onboardingStep            Int            @default(1) @map("onboarding_step")
@@ -377,6 +379,12 @@ model MerchantSettings {
   lowStockNotifications     Boolean   @default(true) @map("low_stock_notifications")
   dailySummaryNotifications Boolean   @default(true) @map("daily_summary_notifications")
   
+  // Owner info (collected during onboarding step 5)
+  ownerFirstName            String?   @map("owner_first_name")
+  ownerLastName             String?   @map("owner_last_name")
+  ownerPhone                String?   @map("owner_phone")
+  ownerTitle                String?   @map("owner_title")
+  
   createdAt                 DateTime  @default(now()) @map("created_at")
   updatedAt                 DateTime  @updatedAt @map("updated_at")
 
@@ -403,6 +411,7 @@ model Location {
   postalCode          String?   @map("postal_code")
   country             String    @default("US")
   timezone            String    @default("America/New_York")
+  taxRate             Decimal   @default(0) @map("tax_rate") @db.Decimal(5, 4)
   isDefault           Boolean   @default(false) @map("is_default")
   isActive            Boolean   @default(true) @map("is_active")
   

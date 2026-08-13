@@ -2,7 +2,6 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { PrismaService } from '../common/prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
 import { getPaginationParams, paginate } from '../common/utils/pagination.util';
-import { v4 as uuidv4 } from 'uuid';
 
 interface CreateOrderItem {
   productId?: string;

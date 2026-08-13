@@ -10,12 +10,16 @@
 - [x] Authentication (JWT + refresh + MFA)
 - [x] Multi-tenancy architecture
 
-## Phase 2: Merchant Onboarding
-- [ ] Onboarding wizard (15-step flow)
-- [ ] Stripe Connect integration (NEEDS: Stripe platform account)
-- [ ] $25/month subscription setup (NEEDS: Stripe price ID)
-- [ ] Email verification flow
-- [ ] Merchant settings
+## Phase 2: Merchant Onboarding ✅
+- [x] Onboarding wizard (15-step flow) - /onboarding
+- [x] Stripe Connect integration (NEEDS: Stripe platform account + `STRIPE_SECRET_KEY`)
+- [x] $25/month subscription setup (NEEDS: `STRIPE_SUBSCRIPTION_PRICE_ID`)
+- [x] Setup intents for payment method collection
+- [x] Stripe Billing Portal integration
+- [x] Subscription reactivation + cancellation
+- [x] Merchant settings page
+- [x] Locations management (full CRUD)
+- [x] Billing invoices page
 
 ## Phase 3: Core Commerce
 - [x] Product catalog (backend)

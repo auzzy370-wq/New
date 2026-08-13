@@ -163,18 +163,21 @@ async function main() {
       },
     });
 
-    // Set initial inventory
-    await prisma.inventory.upsert({
-      where: { locationId_productId_variantId: { locationId: location.id, productId: product.id, variantId: null } },
-      update: {},
-      create: {
-        merchantId: merchant.id,
-        locationId: location.id,
-        productId: product.id,
-        quantity: Math.floor(Math.random() * 50) + 10,
-        lowStockThreshold: 5,
-      },
+    // Set initial inventory (use findFirst + create to handle nullable variantId in unique constraint)
+    const existingInv = await prisma.inventory.findFirst({
+      where: { locationId: location.id, productId: product.id, variantId: null },
     });
+    if (!existingInv) {
+      await prisma.inventory.create({
+        data: {
+          merchantId: merchant.id,
+          locationId: location.id,
+          productId: product.id,
+          quantity: Math.floor(Math.random() * 50) + 10,
+          lowStockThreshold: 5,
+        },
+      });
+    }
   }
 
   // Demo Cashier Employee

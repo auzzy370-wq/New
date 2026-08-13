@@ -31,6 +31,7 @@ import { EmployeesModule } from './employees/employees.module';
 import { DevicesModule } from './devices/devices.module';
 import { RegistersModule } from './registers/registers.module';
 import { HealthModule } from './common/health/health.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { HealthModule } from './common/health/health.module';
     EmployeesModule,
     DevicesModule,
     RegistersModule,
+    OnboardingModule,
   ],
   providers: [
     {

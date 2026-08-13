@@ -12,7 +12,6 @@ import { ConfigService } from '@nestjs/config';
 import { InventoryService } from '../inventory/inventory.service';
 import { AuditService } from '../audit/audit.service';
 import { OrderStatus, PaymentMethod, PaymentStatus, AuditAction } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
 import { calculatePlatformFee } from '../common/utils/money.util';
 
 @Injectable()

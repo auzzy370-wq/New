@@ -108,6 +108,8 @@ export class MerchantsService {
         phone: dto.phone,
         website: dto.website,
         businessType: dto.businessType,
+        businessCategory: dto.businessCategory,
+        description: dto.description,
         taxId: dto.taxId,
         addressLine1: dto.addressLine1,
         addressLine2: dto.addressLine2,
