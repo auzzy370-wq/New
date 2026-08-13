@@ -1,0 +1,83 @@
+name: TapFlowPOS
+
+options:
+  bundleIdPrefix: com.tapflow
+  deploymentTarget:
+    iOS: "16.4"
+  xcodeVersion: "15.4"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+packages:
+  StripeTerminal:
+    url: https://github.com/stripe/stripe-terminal-ios
+    from: "3.9.0"
+  Kingfisher:
+    url: https://github.com/onevcat/Kingfisher
+    from: "7.0.0"
+
+targets:
+  TapFlowPOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.4"
+
+    sources:
+      - path: TapFlowPOS
+        excludes:
+          - "**/.DS_Store"
+
+    info:
+      path: TapFlowPOS/Info.plist
+      properties:
+        CFBundleDisplayName: TapFlow POS
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        CFBundleName: TapFlow POS
+        UILaunchScreen:
+          UIColorName: systemBackground
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSLocationWhenInUseUsageDescription: "TapFlow uses your location for payment terminal configuration."
+        NSBluetoothAlwaysUsageDescription: "TapFlow uses Bluetooth to connect to Stripe card readers."
+        NSCameraUsageDescription: "TapFlow uses the camera to scan product barcodes."
+        NSFaceIDUsageDescription: "TapFlow uses Face ID for quick, secure sign-in."
+        UIBackgroundModes:
+          - bluetooth-central
+
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+        PRODUCT_BUNDLE_IDENTIFIER: com.tapflow.pos
+        DEVELOPMENT_TEAM: ""
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGN_IDENTITY: ""
+        ENABLE_BITCODE: "NO"
+        IPHONEOS_DEPLOYMENT_TARGET: "16.4"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ONLY_ACTIVE_ARCH: "NO"
+        SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+        GCC_OPTIMIZATION_LEVEL: "0"
+        DEBUG_INFORMATION_FORMAT: dwarf
+        INFOPLIST_FILE: TapFlowPOS/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: "NO"
+      configs:
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+          GCC_OPTIMIZATION_LEVEL: s
+
+    dependencies:
+      - package: StripeTerminal
+        product: StripeTerminal
+      - package: Kingfisher
+        product: Kingfisher

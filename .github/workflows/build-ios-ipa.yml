@@ -1,0 +1,141 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches:
+      - main
+      - cursor/ios-ipa-build-e730
+      - "cursor/**"
+    paths:
+      - "apps/ios/**"
+      - ".github/workflows/build-ios-ipa.yml"
+  workflow_dispatch:
+    inputs:
+      sign_method:
+        description: "Signing method: adhoc or unsigned"
+        required: false
+        default: "unsigned"
+
+jobs:
+  build-ipa:
+    name: Build TapFlow POS IPA
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Setup Xcode ─────────────────────────────────────────────────────────
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      # ── Install xcodegen ────────────────────────────────────────────────────
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      # ── Resolve SPM dependencies ────────────────────────────────────────────
+      - name: Restore SPM cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/ios/.build
+            ~/Library/Developer/Xcode/DerivedData
+            ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('apps/ios/project.yml') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      # ── Generate Xcode project ───────────────────────────────────────────────
+      - name: Generate Xcode project
+        working-directory: apps/ios
+        run: xcodegen generate --spec project.yml
+
+      # ── Install xcpretty ────────────────────────────────────────────────────
+      - name: Install xcpretty
+        run: gem install xcpretty --no-document
+
+      # ── Resolve packages ─────────────────────────────────────────────────────
+      - name: Resolve Swift packages
+        working-directory: apps/ios
+        run: |
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project TapFlowPOS.xcodeproj \
+            -scheme TapFlowPOS \
+            -clonedSourcePackagesDirPath SPM
+
+      # ── Build Archive (unsigned) ─────────────────────────────────────────────
+      - name: Build archive (unsigned)
+        working-directory: apps/ios
+        run: |
+          xcodebuild archive \
+            -project TapFlowPOS.xcodeproj \
+            -scheme TapFlowPOS \
+            -destination "generic/platform=iOS" \
+            -archivePath $RUNNER_TEMP/TapFlowPOS.xcarchive \
+            -clonedSourcePackagesDirPath SPM \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
+            ONLY_ACTIVE_ARCH=NO \
+            SKIP_INSTALL=NO \
+            BUILD_LIBRARY_FOR_DISTRIBUTION=NO \
+            | xcpretty && exit ${PIPESTATUS[0]}
+
+      # ── Package as IPA ──────────────────────────────────────────────────────
+      - name: Package IPA
+        run: |
+          APP_PATH="$RUNNER_TEMP/TapFlowPOS.xcarchive/Products/Applications/TapFlowPOS.app"
+          IPA_DIR="$RUNNER_TEMP/ipa"
+          mkdir -p "$IPA_DIR/Payload"
+          cp -r "$APP_PATH" "$IPA_DIR/Payload/"
+          cd "$IPA_DIR"
+          zip -r TapFlowPOS.ipa Payload/
+          echo "IPA_PATH=$IPA_DIR/TapFlowPOS.ipa" >> $GITHUB_ENV
+          ls -lh TapFlowPOS.ipa
+
+      # ── Upload IPA artifact ─────────────────────────────────────────────────
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TapFlowPOS-unsigned-ipa
+          path: ${{ runner.temp }}/ipa/TapFlowPOS.ipa
+          retention-days: 14
+          if-no-files-found: error
+
+      # ── Upload dSYMs for crash symbolication ────────────────────────────────
+      - name: Upload dSYMs
+        uses: actions/upload-artifact@v4
+        with:
+          name: TapFlowPOS-dSYMs
+          path: ${{ runner.temp }}/TapFlowPOS.xcarchive/dSYMs/
+          retention-days: 14
+          if-no-files-found: warn
+
+      # ── Build summary ────────────────────────────────────────────────────────
+      - name: Print build summary
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════════════════════════╗"
+          echo "║             TapFlow POS IPA Build Complete               ║"
+          echo "╠══════════════════════════════════════════════════════════╣"
+          echo "║                                                          ║"
+          echo "║  📦 Download 'TapFlowPOS-unsigned-ipa' from Artifacts   ║"
+          echo "║                                                          ║"
+          echo "║  To install on your iPhone:                              ║"
+          echo "║  1. Download TapFlowPOS.ipa from Actions artifacts       ║"
+          echo "║  2. Install Sideloadly (sideloadly.io) on your Mac/PC   ║"
+          echo "║  3. Connect your iPhone via USB                          ║"
+          echo "║  4. Drag the IPA into Sideloadly and click Start        ║"
+          echo "║  5. Trust the certificate: Settings > General >         ║"
+          echo "║     VPN & Device Management > Trust                     ║"
+          echo "║                                                          ║"
+          echo "║  ⚠️  Tap to Pay requires Stripe approval +               ║"
+          echo "║     Apple entitlement (paid dev account)                 ║"
+          echo "║                                                          ║"
+          echo "╚══════════════════════════════════════════════════════════╝"
+          echo ""
