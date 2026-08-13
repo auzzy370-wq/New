@@ -1,0 +1,80 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+.env.test
+!.env.example
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Prisma
+generated/
+
+# Docker
+docker-compose.override.yml
+
+# iOS
+apps/ios/Pods/
+apps/ios/*.xcworkspace/xcuserdata/
+apps/ios/DerivedData/
+apps/ios/.build/
+apps/ios/*.xcodeproj/xcuserdata/
+apps/ios/fastlane/report.xml
+apps/ios/fastlane/Preview.html
+apps/ios/fastlane/screenshots
+apps/ios/fastlane/test_output
+
+# Android
+apps/android/.gradle/
+apps/android/local.properties
+apps/android/app/build/
+apps/android/app/release/
+apps/android/*.keystore
+apps/android/*.jks
+apps/android/.kotlin/
+
+# Turbo
+.turbo/
+
+# Misc
+*.pem
+*.key
+*.cert
+.cache/
+tmp/
