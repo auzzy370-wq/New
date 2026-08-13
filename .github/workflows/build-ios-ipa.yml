@@ -28,23 +28,31 @@ jobs:
         uses: actions/checkout@v4
 
       # ── Setup Xcode ─────────────────────────────────────────────────────────
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+      - name: Select latest Xcode
+        run: |
+          # Use the latest available Xcode on this runner
+          XCODE=$(ls /Applications | grep "^Xcode_" | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "/Applications/$XCODE/Contents/Developer"
+          xcodebuild -version
 
-      - name: Show Xcode version
-        run: xcodebuild -version
+      # ── Install iOS platform if needed ──────────────────────────────────────
+      - name: Ensure iOS SDK is available
+        run: |
+          xcodebuild -showsdks 2>/dev/null | grep iphoneos || true
+          # Download iOS platform if missing
+          xcodebuild -downloadPlatform iOS 2>/dev/null || true
 
       # ── Install xcodegen ────────────────────────────────────────────────────
       - name: Install xcodegen
         run: brew install xcodegen
 
-      # ── Resolve SPM dependencies ────────────────────────────────────────────
+      # ── Restore SPM cache ────────────────────────────────────────────────────
       - name: Restore SPM cache
         uses: actions/cache@v4
         with:
           path: |
-            apps/ios/.build
-            ~/Library/Developer/Xcode/DerivedData
+            apps/ios/SPM
             ~/Library/Caches/org.swift.swiftpm
           key: spm-${{ runner.os }}-${{ hashFiles('apps/ios/project.yml') }}
           restore-keys: spm-${{ runner.os }}-
@@ -75,7 +83,7 @@ jobs:
           xcodebuild archive \
             -project TapFlowPOS.xcodeproj \
             -scheme TapFlowPOS \
-            -destination "generic/platform=iOS" \
+            -sdk iphoneos \
             -archivePath $RUNNER_TEMP/TapFlowPOS.xcarchive \
             -clonedSourcePackagesDirPath SPM \
             CODE_SIGN_IDENTITY="" \
