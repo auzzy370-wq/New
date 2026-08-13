@@ -86,7 +86,7 @@ struct TapToPayView: View {
             // Actions
             VStack(spacing: 12) {
                 if case .failed = phase {
-                    Button(action: startPaymentFlow) {
+                    Button(action: { Task { await startPaymentFlow() } }) {
                         Text("Try Again")
                             .frame(maxWidth: .infinity)
                             .frame(height: 52)

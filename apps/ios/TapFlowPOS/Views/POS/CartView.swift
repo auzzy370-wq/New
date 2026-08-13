@@ -34,7 +34,7 @@ struct CartView: View {
                         .foregroundColor(.secondary)
                     Text("Tap a product to add it")
                         .font(.caption)
-                        .foregroundColor(.tertiary)
+                        .foregroundColor(.secondary.opacity(0.6))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(.systemGroupedBackground))

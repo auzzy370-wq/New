@@ -72,9 +72,9 @@ struct POSView: View {
                     TextField("Search products...", text: $searchText)
                         .font(.system(size: 15))
                         .autocorrectionDisabled()
-                        .onChange(of: searchText) { _, _ in
-                            viewModel.searchDebounced(searchText)
-                        }
+                        .onChange(of: searchText, perform: { value in
+                            viewModel.searchDebounced(value)
+                        })
                     if !searchText.isEmpty {
                         Button(action: { searchText = "" }) {
                             Image(systemName: "xmark.circle.fill")

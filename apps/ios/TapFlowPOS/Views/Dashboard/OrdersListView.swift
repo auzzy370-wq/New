@@ -12,11 +12,19 @@ struct OrdersListView: View {
                     ProgressView("Loading orders...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if orders.isEmpty {
-                    ContentUnavailableView(
-                        "No Orders",
-                        systemImage: "list.bullet.rectangle",
-                        description: Text("Orders will appear here after your first sale")
-                    )
+                    VStack(spacing: 16) {
+                        Image(systemName: "list.bullet.rectangle")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary.opacity(0.5))
+                        Text("No Orders")
+                            .font(.headline)
+                        Text("Orders will appear here after your first sale")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding()
                 } else {
                     List(orders) { order in
                         NavigationLink(destination: OrderDetailView(order: order)) {

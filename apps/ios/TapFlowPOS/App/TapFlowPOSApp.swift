@@ -8,7 +8,8 @@ struct TapFlowPOSApp: App {
     @StateObject private var terminalService = TerminalService.shared
 
     init() {
-        Terminal.setTokenProvider(TerminalService.shared)
+        Terminal.initWithTokenProvider(TerminalService.shared, delegate: TerminalService.shared)
+        TerminalService.shared.checkDeviceSupport()
     }
 
     var body: some Scene {

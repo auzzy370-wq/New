@@ -34,29 +34,34 @@ final class TerminalService: NSObject, ObservableObject {
     @Published var isTapToPaySupported = false
 
     private var currentPaymentIntent: PaymentIntent?
-    private var collectCancelable: Cancelable?
+    private var collectTask: Task<PaymentIntent, Error>?
     private var locationId: String?
 
     private override init() {
         super.init()
-        isTapToPaySupported = LocalMobileReader.deviceIsSupported
     }
 
-    // MARK: - Connection Token Provider
-
-    func fetchConnectionToken() async throws -> String {
-        guard let locationId = locationId,
-              let _ = AuthService.shared.selectedLocation else {
-            throw NSError(domain: "TerminalService", code: 0,
-                          userInfo: [NSLocalizedDescriptionKey: "No location selected"])
+    // Called after Terminal.initWithTokenProvider to check support
+    func checkDeviceSupport() {
+        let result = Terminal.shared.supportsReaders(
+            of: .tapToPay,
+            discoveryMethod: .tapToPay,
+            simulated: false
+        )
+        if case .success = result {
+            isTapToPaySupported = true
         }
-        return try await APIService.shared.getConnectionToken(locationId: locationId)
     }
 
     // MARK: - Connect (Tap to Pay on iPhone)
 
     func connectTapToPay(locationId: String) async throws {
-        guard LocalMobileReader.deviceIsSupported else {
+        let result = Terminal.shared.supportsReaders(
+            of: .tapToPay,
+            discoveryMethod: .tapToPay,
+            simulated: isSimulated()
+        )
+        guard case .success = result else {
             throw NSError(domain: "TerminalService", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "This device does not support Tap to Pay on iPhone. Requires iPhone XS or later with iOS 16.4+."])
         }
@@ -64,35 +69,22 @@ final class TerminalService: NSObject, ObservableObject {
         self.locationId = locationId
         isConnecting = true
         connectionState = .connecting
-
         defer { isConnecting = false }
 
-        let config = LocalMobileConnectionConfiguration(locationId: locationId)
-
         do {
-            let reader = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Reader, Error>) in
-                let discovery = LocalMobileDiscoveryConfiguration(simulated: self.isSimulated())
-                var cancelable: Cancelable?
-                cancelable = Terminal.shared.discoverReaders(discovery, delegate: self) { error in
-                    if let error = error {
-                        continuation.resume(throwing: error)
-                    }
-                    _ = cancelable
-                }
-
-                Terminal.shared.connectLocalMobileReader(
-                    LocalMobileReader(),
-                    delegate: self,
-                    connectionConfig: config
-                ) { reader, error in
-                    if let reader = reader {
-                        continuation.resume(returning: reader)
-                    } else if let error = error {
-                        continuation.resume(throwing: error)
-                    }
-                }
-            }
-
+            let simulated = isSimulated()
+            let discoveryConfig = try TapToPayDiscoveryConfigurationBuilder()
+                .setSimulated(simulated)
+                .build()
+            let connectionConfig = try TapToPayConnectionConfigurationBuilder(
+                delegate: self,
+                locationId: locationId
+            ).build()
+            let easyConfig = TapToPayEasyConnectConfiguration(
+                discoveryConfiguration: discoveryConfig,
+                connectionConfiguration: connectionConfig
+            )
+            let reader = try await Terminal.shared.easyConnect(easyConfig)
             connectionState = .connected(reader.serialNumber ?? "Tap to Pay")
         } catch {
             connectionState = .error(error.localizedDescription)
@@ -134,39 +126,27 @@ final class TerminalService: NSObject, ObservableObject {
                     }
                 }
             }
-
             currentPaymentIntent = intent
 
-            // Collect payment method
-            paymentState = .collectingPayment
-            let collectedIntent = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<PaymentIntent, Error>) in
-                collectCancelable = Terminal.shared.collectPaymentMethod(intent) { intent, error in
-                    if let intent = intent {
-                        continuation.resume(returning: intent)
-                    } else if let error = error as? NSError, error.domain == "com.stripe-terminal-ios.StripeTerminal" && error.code == 2020 {
-                        continuation.resume(throwing: NSError(domain: "TerminalService", code: 2020, userInfo: [NSLocalizedDescriptionKey: "Payment collection cancelled"]))
-                    } else {
-                        continuation.resume(throwing: error ?? NSError(domain: "Terminal", code: 0, userInfo: nil))
-                    }
-                }
+            // Collect payment method (async)
+            let collectConfig = try CollectPaymentIntentConfigurationBuilder().build()
+            let collectTask = Task<PaymentIntent, Error> {
+                try await Terminal.shared.collectPaymentMethod(intent, collectConfig: collectConfig)
             }
+            self.collectTask = collectTask
+            let collectedIntent = try await collectTask.value
 
-            // Process payment
+            // Confirm payment
             paymentState = .processing
-            let processedIntent = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<PaymentIntent, Error>) in
-                Terminal.shared.processPayment(collectedIntent) { intent, error in
-                    if let intent = intent, intent.status == .requiresCapture || intent.status == .succeeded {
-                        continuation.resume(returning: intent)
-                    } else if let intent = intent {
-                        continuation.resume(returning: intent)
-                    } else {
-                        continuation.resume(throwing: error ?? NSError(domain: "Terminal", code: 0, userInfo: nil))
-                    }
-                }
-            }
+            let confirmConfig = try ConfirmPaymentIntentConfigurationBuilder().build()
+            let confirmedIntent = try await Terminal.shared.confirmPaymentIntent(
+                collectedIntent,
+                confirmConfig: confirmConfig
+            )
 
             currentPaymentIntent = nil
-            return processedIntent.stripeId ?? stripePaymentIntentId
+            paymentState = .succeeded(stripePaymentIntentId)
+            return confirmedIntent.stripeId ?? stripePaymentIntentId
         } catch {
             paymentState = .failed(error.localizedDescription)
             throw error
@@ -176,7 +156,8 @@ final class TerminalService: NSObject, ObservableObject {
     // MARK: - Cancel
 
     func cancelCollection() {
-        collectCancelable?.cancel { _ in }
+        collectTask?.cancel()
+        collectTask = nil
         paymentState = .cancelled
     }
 
@@ -191,22 +172,15 @@ final class TerminalService: NSObject, ObservableObject {
     }
 }
 
-// MARK: - DiscoveryDelegate
+// MARK: - TapToPayReaderDelegate
 
-extension TerminalService: DiscoveryDelegate {
-    nonisolated func terminal(_ terminal: Terminal, didUpdateDiscoveredReaders readers: [Reader]) {}
-}
-
-// MARK: - LocalMobileReaderDelegate
-
-extension TerminalService: LocalMobileReaderDelegate {
-    nonisolated func localMobileReader(_ reader: Reader, didStartInstallingUpdate update: ReaderSoftwareUpdate, cancelable: Cancelable?) {}
-    nonisolated func localMobileReader(_ reader: Reader, didReportReaderSoftwareUpdateProgress progress: Float) {}
-    nonisolated func localMobileReader(_ reader: Reader, didFinishInstallingUpdate update: ReaderSoftwareUpdate?, error: Error?) {}
-    nonisolated func localMobileReader(_ reader: Reader, didRequestReaderInput inputOptions: ReaderInputOptions) {}
-    nonisolated func localMobileReader(_ reader: Reader, didRequestReaderDisplayMessage displayMessage: ReaderDisplayMessage) {}
-    nonisolated func localMobileReader(_ reader: Reader, didReportAvailableUpdate update: ReaderSoftwareUpdate) {}
-    nonisolated func localMobileReaderDidAcceptTermsOfService(_ reader: Reader) {}
+extension TerminalService: TapToPayReaderDelegate {
+    nonisolated func tapToPayReader(_ reader: Reader, didStartInstallingUpdate update: ReaderSoftwareUpdate, cancelable: Cancelable?) {}
+    nonisolated func tapToPayReader(_ reader: Reader, didReportReaderSoftwareUpdateProgress progress: Float) {}
+    nonisolated func tapToPayReader(_ reader: Reader, didFinishInstallingUpdate update: ReaderSoftwareUpdate?, error: Error?) {}
+    nonisolated func tapToPayReaderDidAcceptTermsOfService(_ reader: Reader) {}
+    nonisolated func tapToPayReader(_ reader: Reader, didRequestReaderInput inputOptions: ReaderInputOptions = []) {}
+    nonisolated func tapToPayReader(_ reader: Reader, didRequestReaderDisplayMessage displayMessage: ReaderDisplayMessage) {}
 }
 
 // MARK: - TerminalDelegate
@@ -225,7 +199,8 @@ extension TerminalService: ConnectionTokenProvider {
     nonisolated func fetchConnectionToken(_ completion: @escaping ConnectionTokenCompletionBlock) {
         Task {
             do {
-                let token = try await self.fetchConnectionToken()
+                let locId = await self.locationId ?? ""
+                let token = try await APIService.shared.getConnectionToken(locationId: locId)
                 completion(token, nil)
             } catch {
                 completion(nil, error)

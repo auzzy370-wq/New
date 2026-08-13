@@ -14,11 +14,19 @@ struct ProductsListView: View {
                     ProgressView("Loading products...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if products.isEmpty {
-                    ContentUnavailableView(
-                        search.isEmpty ? "No Products" : "No Results",
-                        systemImage: "square.grid.2x2",
-                        description: Text(search.isEmpty ? "Add products in the web dashboard" : "Try a different search")
-                    )
+                    VStack(spacing: 16) {
+                        Image(systemName: "square.grid.2x2")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary.opacity(0.5))
+                        Text(search.isEmpty ? "No Products" : "No Results")
+                            .font(.headline)
+                        Text(search.isEmpty ? "Add products in the web dashboard" : "Try a different search")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding()
                 } else {
                     List(products) { product in
                         ProductListRow(product: product)
@@ -27,7 +35,7 @@ struct ProductsListView: View {
                 }
             }
             .searchable(text: $search, prompt: "Search products...")
-            .onChange(of: search) { _, _ in searchDebounced() }
+            .onChange(of: search, perform: { _ in searchDebounced() })
             .navigationTitle("Products")
             .navigationBarTitleDisplayMode(.large)
             .task { await loadProducts() }

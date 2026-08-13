@@ -68,7 +68,7 @@ struct CustomerPickerView: View {
                 }
             }
             .searchable(text: $search, prompt: "Search customers...")
-            .onChange(of: search) { _, _ in searchCustomers() }
+            .onChange(of: search, perform: { _ in searchCustomers() })
             .navigationTitle("Select Customer")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

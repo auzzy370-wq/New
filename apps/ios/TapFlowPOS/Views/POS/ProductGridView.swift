@@ -103,9 +103,9 @@ struct PressableButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .onChange(of: configuration.isPressed) { _, pressed in
+            .onChange(of: configuration.isPressed, perform: { pressed in
                 isPressed = pressed
-            }
+            })
     }
 }
 

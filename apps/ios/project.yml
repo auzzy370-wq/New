@@ -11,7 +11,7 @@ options:
 packages:
   StripeTerminal:
     url: https://github.com/stripe/stripe-terminal-ios
-    from: "3.9.0"
+    from: "5.0.0"
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher
     from: "7.0.0"
