@@ -6,6 +6,7 @@ struct POSView: View {
 
     @StateObject private var viewModel = POSViewModel()
     @State private var showCheckout = false
+    @State private var showCustomAmount = false
     @State private var searchText = ""
     @State private var selectedCategory: APICategory?
     @State private var showCustomerPicker = false
@@ -54,6 +55,14 @@ struct POSView: View {
                     showCustomerPicker = false
                 })
             }
+            .sheet(isPresented: $showCustomAmount) {
+                CustomAmountView()
+                    .environmentObject(cartService)
+                    .environmentObject(authService)
+                    .onDisappear {
+                        // Clear any leftover custom items if checkout wasn't completed
+                    }
+            }
             .task { await viewModel.loadInitial() }
             .refreshable { await viewModel.loadInitial() }
         }
@@ -63,6 +72,25 @@ struct POSView: View {
 
     private var productSection: some View {
         VStack(spacing: 0) {
+            // Custom charge quick button
+            Button(action: { showCustomAmount = true }) {
+                HStack(spacing: 10) {
+                    Image(systemName: "plusminus.circle.fill")
+                        .font(.system(size: 20))
+                    Text("Custom Amount")
+                        .font(.system(size: 16, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .opacity(0.6)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 13)
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(0)
+            }
+
             // Search bar
             HStack(spacing: 10) {
                 HStack(spacing: 8) {
@@ -168,20 +196,29 @@ struct POSView: View {
         }
 
         ToolbarItem(placement: .navigationBarTrailing) {
-            HStack(spacing: 16) {
+            HStack(spacing: 14) {
+                // Quick "$ Charge" button in toolbar
+                Button(action: { showCustomAmount = true }) {
+                    Label("Charge", systemImage: "plus.circle.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.blue)
+                        .labelStyle(.titleAndIcon)
+                }
+
                 if let customer = cartService.selectedCustomer {
                     Button(action: { showCustomerPicker = true }) {
                         HStack(spacing: 4) {
                             Image(systemName: "person.circle.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.secondary)
                             Text(customer.firstName)
                                 .font(.caption)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.secondary)
                         }
                     }
                 } else {
                     Button(action: { showCustomerPicker = true }) {
                         Image(systemName: "person.badge.plus")
+                            .foregroundColor(.secondary)
                     }
                 }
 

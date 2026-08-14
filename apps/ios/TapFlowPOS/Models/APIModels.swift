@@ -104,7 +104,7 @@ struct CreateOrderRequest: Encodable {
 }
 
 struct CreateOrderItem: Encodable {
-    let productId: String
+    let productId: String?
     let variantId: String?
     let quantity: Int
     let unitPrice: Decimal

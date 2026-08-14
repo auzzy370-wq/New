@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-// MARK: - Cart Item
+// MARK: - Cart Item (product-based)
 
 struct CartItem: Identifiable, Equatable {
     let id = UUID()
@@ -31,12 +31,27 @@ struct CartItem: Identifiable, Equatable {
     }
 }
 
+// MARK: - Custom Cart Item (free-form amount)
+
+struct CustomCartItem: Identifiable, Equatable {
+    let id = UUID()
+    var description: String
+    var amount: Decimal  // pre-tax dollars
+
+    var lineTotal: Decimal { amount }
+
+    static func == (lhs: CustomCartItem, rhs: CustomCartItem) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 // MARK: - Cart Service
 
 final class CartService: ObservableObject {
     static let shared = CartService()
 
     @Published var items: [CartItem] = []
+    @Published var customItems: [CustomCartItem] = []
     @Published var orderDiscount: Decimal = 0
     @Published var selectedCustomer: APICustomer?
     @Published var tipAmount: Decimal = 0
@@ -47,10 +62,12 @@ final class CartService: ObservableObject {
 
     // MARK: - Computed totals
 
-    var itemCount: Int { items.reduce(0) { $0 + $1.quantity } }
+    var itemCount: Int { items.reduce(0) { $0 + $1.quantity } + customItems.count }
 
     var subtotal: Decimal {
-        items.reduce(Decimal(0)) { $0 + $1.lineTotal }
+        let productSubtotal = items.reduce(Decimal(0)) { $0 + $1.lineTotal }
+        let customSubtotal = customItems.reduce(Decimal(0)) { $0 + $1.lineTotal }
+        return productSubtotal + customSubtotal
     }
 
     var taxAmount: Decimal {
@@ -61,7 +78,7 @@ final class CartService: ObservableObject {
         subtotal - orderDiscount + taxAmount + tipAmount
     }
 
-    var isEmpty: Bool { items.isEmpty }
+    var isEmpty: Bool { items.isEmpty && customItems.isEmpty }
 
     // MARK: - Mutations
 
@@ -92,6 +109,14 @@ final class CartService: ObservableObject {
         }
     }
 
+    func addCustomItem(description: String = "Custom Charge", amount: Decimal) {
+        customItems.append(CustomCartItem(description: description, amount: amount))
+    }
+
+    func removeCustomItem(_ item: CustomCartItem) {
+        customItems.removeAll { $0.id == item.id }
+    }
+
     func setDiscount(_ amount: Decimal) {
         orderDiscount = min(amount, subtotal)
     }
@@ -110,6 +135,7 @@ final class CartService: ObservableObject {
 
     func clear() {
         items = []
+        customItems = []
         orderDiscount = 0
         tipAmount = 0
         notes = ""
@@ -119,7 +145,7 @@ final class CartService: ObservableObject {
     // MARK: - Order creation payload
 
     func buildOrderRequest(locationId: String) -> CreateOrderRequest {
-        let orderItems = items.map { item in
+        let productOrderItems = items.map { item in
             let lineTotal = item.lineTotal
             let itemTax = item.product.isTaxable ? (lineTotal * taxRate) : 0
             return CreateOrderItem(
@@ -134,6 +160,23 @@ final class CartService: ObservableObject {
                 modifiers: item.modifiers.isEmpty ? nil : item.modifiers
             )
         }
+
+        let customOrderItems = customItems.map { item in
+            let itemTax = item.amount * taxRate
+            return CreateOrderItem(
+                productId: nil,
+                variantId: nil,
+                quantity: 1,
+                unitPrice: item.amount,
+                discountAmount: nil,
+                taxAmount: itemTax,
+                total: item.amount + itemTax,
+                name: item.description,
+                modifiers: nil
+            )
+        }
+
+        let orderItems = productOrderItems + customOrderItems
 
         return CreateOrderRequest(
             locationId: locationId,

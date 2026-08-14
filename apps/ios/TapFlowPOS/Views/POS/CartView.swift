@@ -47,6 +47,15 @@ struct CartView: View {
                     .onDelete { offsets in
                         cartService.removeItem(at: offsets)
                     }
+
+                    // Custom charge items
+                    ForEach(cartService.customItems) { item in
+                        CustomCartItemRow(item: item)
+                    }
+                    .onDelete { offsets in
+                        let removed = Array(cartService.customItems)[offsets]
+                        removed.forEach { cartService.removeCustomItem($0) }
+                    }
                 }
                 .listStyle(.plain)
 
@@ -171,6 +180,48 @@ struct CartItemRow: View {
     private func incrementQuantity() {
         quantity += 1
         cartService.updateQuantity(for: item, quantity: quantity)
+    }
+}
+
+// MARK: - Custom Cart Item Row
+
+struct CustomCartItemRow: View {
+    @EnvironmentObject var cartService: CartService
+    let item: CustomCartItem
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.blue.opacity(0.12))
+                    .frame(width: 36, height: 36)
+                Image(systemName: "plusminus.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(.blue)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.description)
+                    .font(.system(size: 14, weight: .medium))
+                    .lineLimit(1)
+                Text("Custom charge")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Text(item.amount.currencyFormatted)
+                .font(.system(size: 14, weight: .semibold))
+
+            Button(action: { cartService.removeCustomItem(item) }) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.secondary.opacity(0.6))
+                    .font(.system(size: 16))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 4)
     }
 }
 
