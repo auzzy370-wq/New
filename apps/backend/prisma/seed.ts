@@ -103,10 +103,10 @@ async function main() {
 
   // Demo Tax
   const tax = await prisma.tax.upsert({
-    where: { id: 'demo-tax-id' },
+    where: { id: '00000000-0000-0000-0000-000000000010' },
     update: {},
     create: {
-      id: 'demo-tax-id',
+      id: '00000000-0000-0000-0000-000000000010',
       merchantId: merchant.id,
       name: 'NY Sales Tax',
       rate: 0.08875,
@@ -118,32 +118,32 @@ async function main() {
   // Demo Categories
   const categories = await Promise.all([
     prisma.category.upsert({
-      where: { id: 'demo-cat-1' },
+      where: { id: '00000000-0000-0000-0000-000000000011' },
       update: {},
-      create: { id: 'demo-cat-1', merchantId: merchant.id, name: 'Coffee', color: '#6366f1', sortOrder: 1 },
+      create: { id: '00000000-0000-0000-0000-000000000011', merchantId: merchant.id, name: 'Coffee', color: '#6366f1', sortOrder: 1 },
     }),
     prisma.category.upsert({
-      where: { id: 'demo-cat-2' },
+      where: { id: '00000000-0000-0000-0000-000000000012' },
       update: {},
-      create: { id: 'demo-cat-2', merchantId: merchant.id, name: 'Food', color: '#f59e0b', sortOrder: 2 },
+      create: { id: '00000000-0000-0000-0000-000000000012', merchantId: merchant.id, name: 'Food', color: '#f59e0b', sortOrder: 2 },
     }),
     prisma.category.upsert({
-      where: { id: 'demo-cat-3' },
+      where: { id: '00000000-0000-0000-0000-000000000013' },
       update: {},
-      create: { id: 'demo-cat-3', merchantId: merchant.id, name: 'Cold Drinks', color: '#3b82f6', sortOrder: 3 },
+      create: { id: '00000000-0000-0000-0000-000000000013', merchantId: merchant.id, name: 'Cold Drinks', color: '#3b82f6', sortOrder: 3 },
     }),
   ]);
 
   // Demo Products
   const products = [
-    { id: 'demo-prod-1', name: 'Espresso', price: 3.50, categoryId: categories[0].id, sku: 'ESP001' },
-    { id: 'demo-prod-2', name: 'Latte', price: 5.00, categoryId: categories[0].id, sku: 'LAT001' },
-    { id: 'demo-prod-3', name: 'Cappuccino', price: 4.75, categoryId: categories[0].id, sku: 'CAP001' },
-    { id: 'demo-prod-4', name: 'Cold Brew', price: 5.50, categoryId: categories[2].id, sku: 'CB001' },
-    { id: 'demo-prod-5', name: 'Croissant', price: 3.25, categoryId: categories[1].id, sku: 'CRO001' },
-    { id: 'demo-prod-6', name: 'Avocado Toast', price: 8.50, categoryId: categories[1].id, sku: 'AVO001' },
-    { id: 'demo-prod-7', name: 'Blueberry Muffin', price: 3.00, categoryId: categories[1].id, sku: 'MUF001' },
-    { id: 'demo-prod-8', name: 'Iced Matcha Latte', price: 6.00, categoryId: categories[2].id, sku: 'MAT001' },
+    { id: '00000000-0000-0000-0000-000000000021', name: 'Espresso', price: 3.50, categoryId: categories[0].id, sku: 'ESP001' },
+    { id: '00000000-0000-0000-0000-000000000022', name: 'Latte', price: 5.00, categoryId: categories[0].id, sku: 'LAT001' },
+    { id: '00000000-0000-0000-0000-000000000023', name: 'Cappuccino', price: 4.75, categoryId: categories[0].id, sku: 'CAP001' },
+    { id: '00000000-0000-0000-0000-000000000024', name: 'Cold Brew', price: 5.50, categoryId: categories[2].id, sku: 'CB001' },
+    { id: '00000000-0000-0000-0000-000000000025', name: 'Croissant', price: 3.25, categoryId: categories[1].id, sku: 'CRO001' },
+    { id: '00000000-0000-0000-0000-000000000026', name: 'Avocado Toast', price: 8.50, categoryId: categories[1].id, sku: 'AVO001' },
+    { id: '00000000-0000-0000-0000-000000000027', name: 'Blueberry Muffin', price: 3.00, categoryId: categories[1].id, sku: 'MUF001' },
+    { id: '00000000-0000-0000-0000-000000000028', name: 'Iced Matcha Latte', price: 6.00, categoryId: categories[2].id, sku: 'MAT001' },
   ];
 
   for (const product of products) {
@@ -183,10 +183,10 @@ async function main() {
   // Demo Cashier Employee
   const cashierPasswordHash = await argon2.hash('1234');
   await prisma.employee.upsert({
-    where: { id: 'demo-employee-1' },
+    where: { id: '00000000-0000-0000-0000-000000000031' },
     update: {},
     create: {
-      id: 'demo-employee-1',
+      id: '00000000-0000-0000-0000-000000000031',
       merchantId: merchant.id,
       firstName: 'Alex',
       lastName: 'Johnson',
@@ -199,10 +199,10 @@ async function main() {
 
   // Demo Device
   await prisma.device.upsert({
-    where: { id: 'demo-device-1' },
+    where: { id: '00000000-0000-0000-0000-000000000041' },
     update: {},
     create: {
-      id: 'demo-device-1',
+      id: '00000000-0000-0000-0000-000000000041',
       merchantId: merchant.id,
       locationId: location.id,
       name: 'iPhone 15 Pro',
