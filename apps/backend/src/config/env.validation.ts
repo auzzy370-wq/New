@@ -26,15 +26,15 @@ export function validate(config: Record<string, unknown>) {
     STRIPE_PLATFORM_FEE_RATE: Joi.number().default(0.01),
 
     // App
-    ALLOWED_ORIGINS: Joi.string().default('http://localhost:3000'),
-    FRONTEND_URL: Joi.string().default('http://localhost:3000'),
+    ALLOWED_ORIGINS: Joi.string().allow('').default('http://localhost:3000'),
+    FRONTEND_URL: Joi.string().allow('').default('http://localhost:3000'),
 
-    // Email
-    SMTP_HOST: Joi.string().default('localhost'),
+    // Email — all optional; empty string disables email sending
+    SMTP_HOST: Joi.string().allow('').default(''),
     SMTP_PORT: Joi.number().default(1025),
     SMTP_USER: Joi.string().optional().allow(''),
     SMTP_PASS: Joi.string().optional().allow(''),
-    EMAIL_FROM: Joi.string().email().default('noreply@tapflow.app'),
+    EMAIL_FROM: Joi.string().allow('').default('noreply@tapflow.app'),
 
     // Storage (S3/MinIO)
     STORAGE_ENDPOINT: Joi.string().optional(),

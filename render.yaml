@@ -20,7 +20,7 @@ services:
           name: tapflow-db
           property: connectionString
 
-      # ── Auto-generated secrets (Render creates these for you) ─
+      # ── Auto-generated secrets ────────────────────────────────
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -30,37 +30,20 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3001
+        value: "3001"
       - key: JWT_EXPIRATION
         value: 15m
       - key: JWT_REFRESH_EXPIRATION
         value: 30d
-
-      # Redis disabled — uses in-memory fallback
-      - key: REDIS_HOST
-        value: ""
-
-      # Email (optional for demo)
-      - key: SMTP_HOST
-        value: ""
-      - key: EMAIL_FROM
-        value: noreply@tapflow.app
-
-      # ── Stripe (app starts without this; add real key to enable payments) ──
-      # Get keys from: https://dashboard.stripe.com/apikeys
-      - key: STRIPE_SECRET_KEY
-        value: ""            # replace with your real sk_live_... or sk_test_...
-
-      # Optional — needed for subscriptions & webhooks
-      - key: STRIPE_WEBHOOK_SECRET
-        value: ""
-      - key: STRIPE_SUBSCRIPTION_PRICE_ID
-        value: ""
-      - key: STRIPE_PLATFORM_FEE_RATE
-        value: "0.01"
-
-      # CORS
       - key: ALLOWED_ORIGINS
         value: "*"
       - key: FRONTEND_URL
         value: https://tapflow-api.onrender.com
+
+      # ── Stripe ────────────────────────────────────────────────
+      # App runs without this; add your key to enable real payments
+      # Get keys from: https://dashboard.stripe.com/apikeys
+      - key: STRIPE_SECRET_KEY
+        value: ""
+      - key: STRIPE_PLATFORM_FEE_RATE
+        value: "0.01"
