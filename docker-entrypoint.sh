@@ -1,14 +1,30 @@
 #!/bin/sh
 set -e
 
-# ── Wait for the database and run migrations (retries up to 60 s) ────────────
-echo "→ Running database migrations (will retry if DB not ready)..."
+# ── Verify DATABASE_URL is present ───────────────────────────────────────────
+if [ -z "$DATABASE_URL" ]; then
+  echo "================================================================"
+  echo "✗  DATABASE_URL is not set."
+  echo ""
+  echo "   Fix options:"
+  echo "   1. In Render dashboard → tapflow-api → Environment, add:"
+  echo "      DATABASE_URL = <your postgres connection string>"
+  echo ""
+  echo "   Free Postgres providers:"
+  echo "     • https://neon.tech   (free tier, 0.5 GB)"
+  echo "     • https://supabase.com (free tier, 500 MB)"
+  echo "================================================================"
+  exit 1
+fi
+
+# ── Wait for Postgres and run migrations (retries for up to 60 s) ────────────
+echo "→ Running database migrations..."
 MAX=30
 i=0
 until npx prisma migrate deploy 2>&1; do
   i=$((i + 1))
-  [ "$i" -ge "$MAX" ] && echo "✗ Migration failed after $MAX attempts — aborting" && exit 1
-  echo "  migration failed, retrying in 2 s (attempt $i/$MAX)..."
+  [ "$i" -ge "$MAX" ] && echo "✗ Migration failed after $MAX attempts — check DATABASE_URL" && exit 1
+  echo "  not ready yet, retrying in 2 s (attempt $i/$MAX)..."
   sleep 2
 done
 echo "✓ Migrations applied"
