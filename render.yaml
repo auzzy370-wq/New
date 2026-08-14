@@ -2,7 +2,7 @@ services:
   - type: web
     name: tapflow-api
     runtime: node
-    buildCommand: cd apps/backend && npm ci --legacy-peer-deps && npx prisma generate && npm run build
+    buildCommand: cd apps/backend && npm install --omit=dev --legacy-peer-deps && npx prisma generate
     startCommand: cd apps/backend && npx prisma migrate deploy && node dist/src/main
     plan: free
     healthCheckPath: /health

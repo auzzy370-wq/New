@@ -1,0 +1,187 @@
+import { LocationsService } from './locations.service';
+import { CreateLocationDto, UpdateLocationDto } from './dto/location.dto';
+export declare class LocationsController {
+    private readonly locationsService;
+    constructor(locationsService: LocationsService);
+    findAll(merchantId: string): Promise<({
+        _count: {
+            orders: number;
+            employees: number;
+            devices: number;
+        };
+    } & {
+        name: string;
+        email: string | null;
+        phone: string | null;
+        id: string;
+        timezone: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string;
+        code: string | null;
+        isActive: boolean;
+        taxRate: import("@prisma/client/runtime/library").Decimal;
+        isDefault: boolean;
+        stripeLocationId: string | null;
+    })[]>;
+    getSummary(merchantId: string): Promise<{
+        total: number;
+        active: number;
+        defaultLocation: {
+            id: string;
+            name: string;
+        } | null;
+        locations: {
+            id: string;
+            name: string;
+            city: string | null;
+            state: string | null;
+            isDefault: boolean;
+            isActive: boolean;
+            stripeConnected: boolean;
+        }[];
+    }>;
+    create(merchantId: string, dto: CreateLocationDto): Promise<{
+        name: string;
+        email: string | null;
+        phone: string | null;
+        id: string;
+        timezone: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string;
+        code: string | null;
+        isActive: boolean;
+        taxRate: import("@prisma/client/runtime/library").Decimal;
+        isDefault: boolean;
+        stripeLocationId: string | null;
+    }>;
+    findOne(merchantId: string, id: string): Promise<{
+        devices: {
+            type: import("@prisma/client").$Enums.DeviceType;
+            name: string;
+            id: string;
+            status: import("@prisma/client").$Enums.DeviceStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string;
+            locationId: string | null;
+            serialNumber: string | null;
+            stripeReaderId: string | null;
+            stripeReaderLabel: string | null;
+            lastSeenAt: Date | null;
+            registeredAt: Date;
+        }[];
+        taxes: {
+            id: string;
+            createdAt: Date;
+            taxId: string;
+            locationId: string;
+        }[];
+        _count: {
+            orders: number;
+        };
+    } & {
+        name: string;
+        email: string | null;
+        phone: string | null;
+        id: string;
+        timezone: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string;
+        code: string | null;
+        isActive: boolean;
+        taxRate: import("@prisma/client/runtime/library").Decimal;
+        isDefault: boolean;
+        stripeLocationId: string | null;
+    }>;
+    update(merchantId: string, id: string, dto: UpdateLocationDto): Promise<{
+        name: string;
+        email: string | null;
+        phone: string | null;
+        id: string;
+        timezone: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string;
+        code: string | null;
+        isActive: boolean;
+        taxRate: import("@prisma/client/runtime/library").Decimal;
+        isDefault: boolean;
+        stripeLocationId: string | null;
+    }>;
+    delete(merchantId: string, id: string): Promise<{
+        name: string;
+        email: string | null;
+        phone: string | null;
+        id: string;
+        timezone: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string;
+        code: string | null;
+        isActive: boolean;
+        taxRate: import("@prisma/client/runtime/library").Decimal;
+        isDefault: boolean;
+        stripeLocationId: string | null;
+    }>;
+    setDefault(merchantId: string, id: string): Promise<{
+        name: string;
+        email: string | null;
+        phone: string | null;
+        id: string;
+        timezone: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string;
+        code: string | null;
+        isActive: boolean;
+        taxRate: import("@prisma/client/runtime/library").Decimal;
+        isDefault: boolean;
+        stripeLocationId: string | null;
+    }>;
+    getConnectionToken(merchantId: string, id: string): Promise<import("stripe").Stripe.Terminal.ConnectionToken>;
+}

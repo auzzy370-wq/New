@@ -1,0 +1,146 @@
+import { PrismaService } from '../common/prisma/prisma.service';
+export declare class CustomersService {
+    private readonly prisma;
+    constructor(prisma: PrismaService);
+    create(merchantId: string, data: {
+        firstName: string;
+        lastName?: string;
+        email?: string;
+        phone?: string;
+        addressLine1?: string;
+        city?: string;
+        state?: string;
+        postalCode?: string;
+        country?: string;
+        notes?: string;
+        tags?: string[];
+    }): Promise<{
+        email: string | null;
+        firstName: string;
+        lastName: string | null;
+        phone: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string | null;
+        tags: string[];
+        notes: string | null;
+        totalSpent: import("@prisma/client/runtime/library").Decimal;
+        orderCount: number;
+        averageOrderValue: import("@prisma/client/runtime/library").Decimal;
+        lastPurchaseAt: Date | null;
+    }>;
+    findAll(merchantId: string, params: {
+        page?: number;
+        limit?: number;
+        search?: string;
+    }): Promise<import("../common/utils/pagination.util").PaginatedResult<{
+        email: string | null;
+        firstName: string;
+        lastName: string | null;
+        phone: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string | null;
+        tags: string[];
+        notes: string | null;
+        totalSpent: import("@prisma/client/runtime/library").Decimal;
+        orderCount: number;
+        averageOrderValue: import("@prisma/client/runtime/library").Decimal;
+        lastPurchaseAt: Date | null;
+    }>>;
+    findById(merchantId: string, id: string): Promise<{
+        orders: ({
+            payments: {
+                amount: number;
+                method: import("@prisma/client").$Enums.PaymentMethod;
+            }[];
+        } & {
+            id: string;
+            status: import("@prisma/client").$Enums.OrderStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string;
+            currency: string;
+            cancelledAt: Date | null;
+            locationId: string;
+            employeeId: string | null;
+            notes: string | null;
+            orderNumber: string;
+            customerId: string | null;
+            deviceId: string | null;
+            subtotalAmount: number;
+            discountAmount: number;
+            taxAmount: number;
+            tipAmount: number;
+            totalAmount: number;
+            discountCode: string | null;
+            discountType: string | null;
+            discountValue: import("@prisma/client/runtime/library").Decimal | null;
+            paidAt: Date | null;
+        })[];
+    } & {
+        email: string | null;
+        firstName: string;
+        lastName: string | null;
+        phone: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string | null;
+        tags: string[];
+        notes: string | null;
+        totalSpent: import("@prisma/client/runtime/library").Decimal;
+        orderCount: number;
+        averageOrderValue: import("@prisma/client/runtime/library").Decimal;
+        lastPurchaseAt: Date | null;
+    }>;
+    update(merchantId: string, id: string, data: object): Promise<{
+        email: string | null;
+        firstName: string;
+        lastName: string | null;
+        phone: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        merchantId: string;
+        addressLine1: string | null;
+        addressLine2: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string | null;
+        tags: string[];
+        notes: string | null;
+        totalSpent: import("@prisma/client/runtime/library").Decimal;
+        orderCount: number;
+        averageOrderValue: import("@prisma/client/runtime/library").Decimal;
+        lastPurchaseAt: Date | null;
+    }>;
+    delete(merchantId: string, id: string): Promise<{
+        success: boolean;
+    }>;
+}

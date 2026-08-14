@@ -1,0 +1,3 @@
+# Local dev artifacts — do NOT ignore dist/ on this branch (it's pre-built)
+node_modules/
+*.log

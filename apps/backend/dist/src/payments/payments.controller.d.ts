@@ -1,0 +1,137 @@
+import { PaymentsService } from './payments.service';
+import { PaymentMethod } from '@prisma/client';
+export declare class PaymentsController {
+    private readonly paymentsService;
+    constructor(paymentsService: PaymentsService);
+    createIntent(merchantId: string, body: {
+        orderId: string;
+        paymentMethod: PaymentMethod;
+    }, idempotencyKey: string): Promise<any>;
+    processCash(merchantId: string, body: {
+        orderId: string;
+        amount: number;
+        tendered: number;
+        employeeId?: string;
+    }, idempotencyKey: string): Promise<any>;
+    confirm(merchantId: string, paymentIntentId: string): Promise<import("stripe").Stripe.PaymentIntent | {
+        id: string;
+        status: import("@prisma/client").$Enums.PaymentStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        currency: string;
+        idempotencyKey: string | null;
+        amount: number;
+        stripeReaderId: string | null;
+        orderId: string;
+        tipAmount: number;
+        stripePaymentIntentId: string | null;
+        stripeChargeId: string | null;
+        method: import("@prisma/client").$Enums.PaymentMethod;
+        platformFeeAmount: number;
+        processorFeeAmount: number;
+        netAmount: number;
+        last4: string | null;
+        cardBrand: string | null;
+        receiptUrl: string | null;
+        capturedAt: Date | null;
+        failedAt: Date | null;
+        failureReason: string | null;
+        metadata: import("@prisma/client/runtime/library").JsonValue | null;
+    } | {
+        paymentId: string;
+        status: "canceled" | "processing" | "requires_action" | "requires_confirmation" | "requires_payment_method";
+    }>;
+    getPayment(merchantId: string, id: string): Promise<{
+        order: {
+            id: string;
+            status: import("@prisma/client").$Enums.OrderStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string;
+            currency: string;
+            cancelledAt: Date | null;
+            locationId: string;
+            employeeId: string | null;
+            notes: string | null;
+            orderNumber: string;
+            customerId: string | null;
+            deviceId: string | null;
+            subtotalAmount: number;
+            discountAmount: number;
+            taxAmount: number;
+            tipAmount: number;
+            totalAmount: number;
+            discountCode: string | null;
+            discountType: string | null;
+            discountValue: import("@prisma/client/runtime/library").Decimal | null;
+            paidAt: Date | null;
+        };
+        platformFee: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string;
+            currency: string;
+            paymentId: string;
+            transactionAmount: number;
+            feeRate: import("@prisma/client/runtime/library").Decimal;
+            feeAmount: number;
+            stripeApplicationFeeId: string | null;
+        } | null;
+        refunds: {
+            id: string;
+            status: import("@prisma/client").$Enums.RefundStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            merchantId: string;
+            currency: string;
+            idempotencyKey: string | null;
+            amount: number;
+            reason: string | null;
+            orderId: string;
+            notes: string | null;
+            failureReason: string | null;
+            paymentId: string;
+            stripeRefundId: string | null;
+            restoreInventory: boolean;
+            processedAt: Date | null;
+        }[];
+        attempts: {
+            id: string;
+            status: import("@prisma/client").$Enums.PaymentStatus;
+            createdAt: Date;
+            amount: number;
+            stripePaymentIntentId: string | null;
+            method: import("@prisma/client").$Enums.PaymentMethod;
+            failureReason: string | null;
+            metadata: import("@prisma/client/runtime/library").JsonValue | null;
+            paymentId: string;
+        }[];
+    } & {
+        id: string;
+        status: import("@prisma/client").$Enums.PaymentStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        merchantId: string;
+        currency: string;
+        idempotencyKey: string | null;
+        amount: number;
+        stripeReaderId: string | null;
+        orderId: string;
+        tipAmount: number;
+        stripePaymentIntentId: string | null;
+        stripeChargeId: string | null;
+        method: import("@prisma/client").$Enums.PaymentMethod;
+        platformFeeAmount: number;
+        processorFeeAmount: number;
+        netAmount: number;
+        last4: string | null;
+        cardBrand: string | null;
+        receiptUrl: string | null;
+        capturedAt: Date | null;
+        failedAt: Date | null;
+        failureReason: string | null;
+        metadata: import("@prisma/client/runtime/library").JsonValue | null;
+    }>;
+}
