@@ -22,4 +22,4 @@ node dist/prisma/seed.js 2>/dev/null \
   || echo "  Seed skipped (already seeded)"
 
 echo "→ Starting TapFlow API..."
-exec node dist/main
+exec node dist/src/main
