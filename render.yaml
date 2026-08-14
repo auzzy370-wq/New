@@ -1,7 +1,3 @@
-databases:
-  - name: tapflow-db
-    plan: free
-
 services:
   - type: web
     name: tapflow-api
@@ -12,14 +8,11 @@ services:
     healthCheckPath: /health
 
     envVars:
-      # ── Database ──────────────────────────────────────────────
-      # Render auto-fills this from the database above.
-      # If you see a DATABASE_URL error, paste your own Postgres URL here
-      # (free options: neon.tech, supabase.com, railway.app)
+      # ── DATABASE_URL ──────────────────────────────────────────
+      # Set this manually in Render dashboard → tapflow-api → Environment
+      # Use your Neon / Supabase / Railway connection string
       - key: DATABASE_URL
-        fromDatabase:
-          name: tapflow-db
-          property: connectionString
+        sync: false
 
       # ── Auto-generated secrets ────────────────────────────────
       - key: JWT_SECRET
