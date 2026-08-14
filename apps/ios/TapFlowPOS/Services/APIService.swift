@@ -97,15 +97,44 @@ actor APIService {
     private func decodeResponse<T: Decodable>(_ data: Data) throws -> T {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
+        // Normalise any Prisma Decimal objects ({s,e,d}) to plain numbers
+        let normalized = normalizePrismaDecimals(data)
         do {
-            // Try wrapped response first
-            if let wrapped = try? decoder.decode(APIResponse<T>.self, from: data) {
+            if let wrapped = try? decoder.decode(APIResponse<T>.self, from: normalized) {
                 return wrapped.data
             }
-            return try decoder.decode(T.self, from: data)
+            return try decoder.decode(T.self, from: normalized)
         } catch {
             throw APIError.decodingError(error)
         }
+    }
+
+    /// Recursively replaces decimal.js Decimal objects `{s,e,d}` with plain JSON numbers.
+    /// Prisma serialises `Decimal` fields as these objects unless `.toJSON()` is overridden.
+    /// Formula: value = s * d[0] * 10^(e - 6)  (base-1e7 single-word representation)
+    private func normalizePrismaDecimals(_ data: Data) -> Data {
+        guard let json = try? JSONSerialization.jsonObject(with: data, options: []) else { return data }
+        let fixed = fixDecimalsInValue(json)
+        return (try? JSONSerialization.data(withJSONObject: fixed, options: [])) ?? data
+    }
+
+    private func fixDecimalsInValue(_ value: Any) -> Any {
+        if let dict = value as? [String: Any] {
+            // Prisma Decimal object: exactly keys "s", "e", "d" where d is [Int]
+            if dict.count == 3,
+               let s = dict["s"] as? Int,
+               let e = dict["e"] as? Int,
+               let d = dict["d"] as? [Int],
+               let first = d.first {
+                // decimal.js value = sign * d[0] * 10^(e-6)
+                return Double(s) * Double(first) * pow(10.0, Double(e) - 6.0)
+            }
+            return dict.mapValues { fixDecimalsInValue($0) }
+        }
+        if let array = value as? [Any] {
+            return array.map { fixDecimalsInValue($0) }
+        }
+        return value
     }
 
     private func extractErrorMessage(from data: Data) -> String? {
