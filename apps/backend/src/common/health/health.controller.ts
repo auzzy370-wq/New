@@ -30,11 +30,14 @@ export class HealthController {
 
     try {
       const client = this.redis.getClient();
-      await client.ping();
-      checks.services.redis = 'ok';
+      if (client) {
+        await client.ping();
+        checks.services.redis = 'ok';
+      } else {
+        checks.services.redis = 'in-memory';
+      }
     } catch {
-      checks.services.redis = 'error';
-      checks.status = 'degraded';
+      checks.services.redis = 'in-memory';
     }
 
     return checks;

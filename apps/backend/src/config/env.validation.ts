@@ -14,15 +14,15 @@ export function validate(config: Record<string, unknown>) {
     JWT_REFRESH_SECRET: Joi.string().min(32).required(),
     JWT_REFRESH_EXPIRATION: Joi.string().default('30d'),
 
-    // Redis
-    REDIS_HOST: Joi.string().default('localhost'),
+    // Redis (optional — omit to use in-memory fallback)
+    REDIS_HOST: Joi.string().optional().allow('').default(''),
     REDIS_PORT: Joi.number().default(6379),
     REDIS_PASSWORD: Joi.string().optional().allow(''),
 
     // Stripe
     STRIPE_SECRET_KEY: Joi.string().required(),
-    STRIPE_WEBHOOK_SECRET: Joi.string().required(),
-    STRIPE_SUBSCRIPTION_PRICE_ID: Joi.string().required(),
+    STRIPE_WEBHOOK_SECRET: Joi.string().optional().allow('').default(''),
+    STRIPE_SUBSCRIPTION_PRICE_ID: Joi.string().optional().allow('').default(''),
     STRIPE_PLATFORM_FEE_RATE: Joi.number().default(0.01),
 
     // App
