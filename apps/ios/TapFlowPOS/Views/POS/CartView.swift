@@ -53,8 +53,9 @@ struct CartView: View {
                         CustomCartItemRow(item: item)
                     }
                     .onDelete { offsets in
-                        let removed = Array(cartService.customItems)[offsets]
-                        removed.forEach { cartService.removeCustomItem($0) }
+                        for idx in offsets.sorted().reversed() {
+                            cartService.removeCustomItem(cartService.customItems[idx])
+                        }
                     }
                 }
                 .listStyle(.plain)

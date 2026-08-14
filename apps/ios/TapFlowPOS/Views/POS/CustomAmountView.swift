@@ -4,6 +4,7 @@ import SwiftUI
 /// then proceeds directly to checkout (Tap to Pay or cash).
 struct CustomAmountView: View {
     @EnvironmentObject var cartService: CartService
+    @EnvironmentObject var authService: AuthService
     @Environment(\.dismiss) var dismiss
 
     @State private var digits: String = ""          // raw digit string e.g. "2500" = $25.00
@@ -88,13 +89,12 @@ struct CustomAmountView: View {
             .navigationTitle("Custom Charge")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showCheckout, onDismiss: {
-                // If checkout was closed without completing, remove the custom item we added
                 cartService.customItems.removeAll()
                 dismiss()
             }) {
                 CheckoutView()
                     .environmentObject(cartService)
-                    .environmentObject(AuthService.shared)
+                    .environmentObject(authService)
             }
             .alert("Label", isPresented: $editingDescription) {
                 TextField("Custom Charge", text: $description)
