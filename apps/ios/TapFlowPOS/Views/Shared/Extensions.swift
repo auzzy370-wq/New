@@ -21,6 +21,19 @@ extension Decimal {
     }
 }
 
+// MARK: - Double formatting (for API numeric fields)
+
+extension Double {
+    var currencyFormatted: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: self)) ?? "$0.00"
+    }
+}
+
 // MARK: - Color from hex
 
 extension Color {

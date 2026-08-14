@@ -34,36 +34,9 @@ struct CustomerPickerView: View {
                 }
 
                 ForEach(customers) { customer in
-                    Button(action: {
+                    CustomerRow(customer: customer) {
                         onSelect(customer)
                         dismiss()
-                    }) {
-                        HStack(spacing: 12) {
-                            Circle()
-                                .fill(Color.blue.opacity(0.15))
-                                .frame(width: 36, height: 36)
-                                .overlay(
-                                    Text(String(customer.firstName.prefix(1)))
-                                        .font(.system(size: 15, weight: .bold))
-                                        .foregroundColor(.blue)
-                                )
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(customer.displayName)
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundColor(.primary)
-                                if let email = customer.email {
-                                    Text(email)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            Spacer()
-                            if let spent = customer.totalSpent {
-                                Text(spent.currencyFormatted)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
                     }
                 }
             }
@@ -80,7 +53,48 @@ struct CustomerPickerView: View {
         }
     }
 
-    private func loadCustomers() async {
+}
+
+// MARK: - Customer row extracted to help the type checker
+
+private struct CustomerRow: View {
+    let customer: APICustomer
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                Circle()
+                    .fill(Color.blue.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                    .overlay(
+                        Text(String(customer.firstName.prefix(1)))
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(.blue)
+                    )
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(customer.displayName)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.primary)
+                    if let email = customer.email {
+                        Text(email)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                Spacer()
+                if let spent = customer.totalSpent {
+                    Text(spent.currencyFormatted)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+    }
+}
+
+private extension CustomerPickerView {
+    func loadCustomers() async {
         isLoading = true
         do {
             let response = try await APIService.shared.getCustomers()
@@ -89,7 +103,7 @@ struct CustomerPickerView: View {
         isLoading = false
     }
 
-    private func searchCustomers() {
+    func searchCustomers() {
         searchTask?.cancel()
         searchTask = Task {
             try? await Task.sleep(nanoseconds: 300_000_000)
