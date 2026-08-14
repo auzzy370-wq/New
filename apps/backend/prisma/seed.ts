@@ -1,5 +1,5 @@
 import { PrismaClient, UserRole, UserStatus, MerchantStatus, DeviceType } from '@prisma/client';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -7,7 +7,7 @@ async function main() {
   console.log('Seeding database...');
 
   // Platform Admin
-  const adminPasswordHash = await argon2.hash('Admin123!', { type: argon2.argon2id });
+  const adminPasswordHash = await bcrypt.hash('Admin123!', 12);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@tapflow.app' },
     update: {},
@@ -23,7 +23,7 @@ async function main() {
   });
 
   // Demo Merchant Owner
-  const ownerPasswordHash = await argon2.hash('Demo123!', { type: argon2.argon2id });
+  const ownerPasswordHash = await bcrypt.hash('Demo123!', 12);
   const owner = await prisma.user.upsert({
     where: { email: 'owner@demo-merchant.com' },
     update: {},
@@ -181,7 +181,7 @@ async function main() {
   }
 
   // Demo Cashier Employee
-  const cashierPasswordHash = await argon2.hash('1234');
+  const cashierPasswordHash = await bcrypt.hash('1234', 10);
   await prisma.employee.upsert({
     where: { id: '00000000-0000-0000-0000-000000000031' },
     update: {},

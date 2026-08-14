@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction, UserRole } from '@prisma/client';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class EmployeesService {
@@ -15,7 +15,7 @@ export class EmployeesService {
     firstName: string; lastName: string; email?: string; phone?: string;
     pin?: string; role?: UserRole; permissions?: string[]; locationIds?: string[];
   }, actorUserId?: string) {
-    const pinHash = data.pin ? await argon2.hash(data.pin) : undefined;
+    const pinHash = data.pin ? await bcrypt.hash(data.pin, 10) : undefined;
 
     const employee = await this.prisma.employee.create({
       data: {
@@ -89,6 +89,6 @@ export class EmployeesService {
       where: { id: employeeId, merchantId },
     });
     if (!employee?.pin) return false;
-    return argon2.verify(employee.pin, pin);
+    return bcrypt.compare(pin, employee.pin);
   }
 }

@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { RedisService } from '../common/redis/redis.service';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcryptjs';
 import { authenticator } from 'otplib';
 import * as qrcode from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
@@ -41,12 +41,7 @@ export class AuthService {
       throw new ConflictException('An account with this email already exists');
     }
 
-    const passwordHash = await argon2.hash(dto.password, {
-      type: argon2.argon2id,
-      memoryCost: 2 ** 16,
-      timeCost: 3,
-      parallelism: 1,
-    });
+    const passwordHash = await bcrypt.hash(dto.password, 12);
 
     const verificationToken = uuidv4();
     const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -150,7 +145,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const isPasswordValid = await argon2.verify(user.passwordHash, password);
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -267,9 +262,7 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired password reset token');
     }
 
-    const passwordHash = await argon2.hash(newPassword, {
-      type: argon2.argon2id,
-    });
+    const passwordHash = await bcrypt.hash(newPassword, 12);
 
     await this.prisma.user.update({
       where: { id: user.id },
