@@ -12,7 +12,7 @@ struct CartItem: Identifiable, Equatable {
     var itemDiscount: Decimal
 
     var unitPrice: Decimal {
-        variant?.price ?? product.price
+        Decimal(variant?.price ?? product.price)
     }
 
     var lineTotal: Decimal {

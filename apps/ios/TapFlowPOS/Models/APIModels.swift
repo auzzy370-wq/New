@@ -39,8 +39,8 @@ struct APIProduct: Decodable, Identifiable, Hashable {
     let description: String?
     let sku: String?
     let barcode: String?
-    let price: Decimal
-    let cost: Decimal?
+    let price: Double
+    let cost: Double?
     let imageUrl: String?
     let isActive: Bool
     let isTaxable: Bool
@@ -57,7 +57,7 @@ struct APIProductVariant: Decodable, Identifiable {
     let id: String
     let name: String
     let sku: String?
-    let price: Decimal
+    let price: Double
     let inventory: [APIInventory]?
 }
 
@@ -83,7 +83,7 @@ struct APICustomer: Decodable, Identifiable {
     let lastName: String
     let email: String?
     let phone: String?
-    let totalSpent: Decimal?
+    let totalSpent: Double?
     let orderCount: Int?
     var displayName: String { "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces) }
 }
@@ -119,11 +119,11 @@ struct APIOrder: Decodable, Identifiable {
     let id: String
     let orderNumber: String
     let status: String
-    let subtotal: Decimal
-    let total: Decimal
-    let taxAmount: Decimal
-    let tipAmount: Decimal
-    let discountAmount: Decimal?
+    let subtotal: Double
+    let total: Double
+    let taxAmount: Double
+    let tipAmount: Double
+    let discountAmount: Double?
     let createdAt: String
     let customer: APICustomer?
 }
@@ -164,7 +164,9 @@ struct APILocation: Decodable, Identifiable {
     let state: String?
     let isDefault: Bool
     let stripeLocationId: String?
-    let taxRate: Decimal?
+    // Backend serialises Prisma Decimal as a plain number after the toJSON fix.
+    // Using Double here is safe and avoids any residual type-mismatch issues.
+    let taxRate: Double?
 }
 
 // MARK: - API Response Wrapper

@@ -1,5 +1,12 @@
 import { NestFactory, Reflector } from '@nestjs/core';
+import { Decimal } from '@prisma/client/runtime/library';
 import { AppModule } from './app.module';
+
+// Prisma Decimal fields serialize as { s, e, d } objects by default.
+// Override toJSON so they become plain numbers in all API responses.
+(Decimal.prototype as unknown as { toJSON: () => number }).toJSON = function () {
+  return this.toNumber();
+};
 import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as compression from 'compression';

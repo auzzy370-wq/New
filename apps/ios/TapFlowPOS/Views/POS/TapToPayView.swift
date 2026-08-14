@@ -169,8 +169,12 @@ struct TapToPayView: View {
 
     @MainActor
     private func startPaymentFlow() async {
+        // If no location, try one reload before giving up
+        if authService.selectedLocation == nil {
+            await authService.reloadLocations()
+        }
         guard let locationId = authService.selectedLocation?.id else {
-            phase = .failed("No location selected")
+            phase = .failed("No location found. Check Settings → Server URL and ensure you are logged in as a merchant.")
             return
         }
 
@@ -240,7 +244,12 @@ struct TapToPayView: View {
 
         } catch {
             animating = false
-            phase = .failed(error.localizedDescription)
+            let msg = error.localizedDescription
+            if msg.contains("No Stripe account") || msg.contains("stripeAccountId") {
+                phase = .failed("Stripe Connect not configured. In the Dashboard, complete merchant onboarding to enable live payments.")
+            } else {
+                phase = .failed(msg)
+            }
             let generator = UINotificationFeedbackGenerator()
             generator.notificationOccurred(.error)
         }

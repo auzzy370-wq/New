@@ -96,6 +96,8 @@ final class AuthService: ObservableObject {
 
     // MARK: - Load locations
 
+    func reloadLocations() async { await loadLocations() }
+
     private func loadLocations() async {
         do {
             let locations = try await APIService.shared.getLocations()
@@ -103,7 +105,7 @@ final class AuthService: ObservableObject {
             await MainActor.run {
                 self.selectedLocation = defaultLocation
                 if let rate = defaultLocation?.taxRate {
-                    CartService.shared.setTaxRate(rate)
+                    CartService.shared.setTaxRate(Decimal(rate))
                 }
             }
         } catch {
