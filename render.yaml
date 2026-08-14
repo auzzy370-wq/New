@@ -8,19 +8,14 @@ services:
     healthCheckPath: /health
 
     envVars:
-      # ── DATABASE_URL ──────────────────────────────────────────
-      # Set this manually in Render dashboard → tapflow-api → Environment
-      # Use your Neon / Supabase / Railway connection string
       - key: DATABASE_URL
-        sync: false
+        value: postgresql://neondb_owner:npg_7NEwOIS4mfWv@ep-withered-sea-axy6hrvt.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require
 
-      # ── Auto-generated secrets ────────────────────────────────
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
 
-      # ── App config ────────────────────────────────────────────
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -34,8 +29,6 @@ services:
       - key: FRONTEND_URL
         value: https://tapflow-api.onrender.com
 
-      # ── Stripe ────────────────────────────────────────────────
-      # App boots without this. Add your real key to enable payments.
       - key: STRIPE_SECRET_KEY
         value: ""
       - key: STRIPE_PLATFORM_FEE_RATE
