@@ -42,18 +42,13 @@ final class TerminalService: NSObject, ObservableObject {
         super.init()
     }
 
-    // Called after Terminal.initWithTokenProvider to check support
+    // Called after Terminal.initWithTokenProvider to check support.
+    // Hardware compatibility is validated by the SDK when connectTapToPay is called;
+    // we gate the UI on iOS 16+ (minimum OS for Tap to Pay on iPhone).
     func checkDeviceSupport() {
-        do {
-            // DeviceType.appleBuiltIn = Tap to Pay on iPhone; DiscoveryMethod.tapToPay
-            let supported = try Terminal.shared.supportsReadersOfType(
-                .appleBuiltIn,
-                discoveryMethod: .tapToPay,
-                simulated: false
-            )
-            isTapToPaySupported = supported
-        } catch {
-            // Device or OS doesn't support Tap to Pay
+        if #available(iOS 16.0, *) {
+            isTapToPaySupported = true
+        } else {
             isTapToPaySupported = false
         }
     }
@@ -189,10 +184,15 @@ final class TerminalService: NSObject, ObservableObject {
     // MARK: - Cancel
 
     func cancelCollection() {
-        collectCancelable?.cancel()
-        collectCancelable = nil
-        easyConnectCancelable?.cancel()
-        easyConnectCancelable = nil
+        // Cancelable.cancel() is async throws in SDK 5.x — fire-and-forget via Task
+        if let cancelable = collectCancelable {
+            collectCancelable = nil
+            Task { try? await cancelable.cancel() }
+        }
+        if let cancelable = easyConnectCancelable {
+            easyConnectCancelable = nil
+            Task { try? await cancelable.cancel() }
+        }
         paymentState = .cancelled
     }
 
