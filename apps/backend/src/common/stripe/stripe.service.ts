@@ -100,11 +100,12 @@ export class StripeService {
     );
   }
 
-  async createTerminalConnectionToken(connectedAccountId: string, locationId?: string): Promise<Stripe.Terminal.ConnectionToken> {
-    return this.client.terminal.connectionTokens.create(
-      { location: locationId },
-      { stripeAccount: connectedAccountId },
-    );
+  async createTerminalConnectionToken(connectedAccountId: string | undefined, locationId?: string): Promise<Stripe.Terminal.ConnectionToken> {
+    const params: Stripe.Terminal.ConnectionTokenCreateParams = {};
+    if (locationId) params.location = locationId;
+    const options: Stripe.RequestOptions = {};
+    if (connectedAccountId) options.stripeAccount = connectedAccountId;
+    return this.client.terminal.connectionTokens.create(params, options);
   }
 
   // ── Payment Intents ───────────────────────────────────────────────────────────

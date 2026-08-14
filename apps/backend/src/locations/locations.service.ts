@@ -157,15 +157,22 @@ export class LocationsService {
       where: { id: merchantId },
     });
 
-    if (!merchant.stripeAccountId) {
-      throw new BadRequestException('No Stripe account connected');
-    }
-
     const location = await this.findById(merchantId, locationId);
 
+    // If the merchant has a connected Stripe account, use it (production).
+    // Otherwise fall back to the platform account so developers can test
+    // in Stripe test mode without completing Connect onboarding first.
+    const connectedAccountId = merchant.stripeAccountId || undefined;
+
+    // Only pass a real Stripe location ID (skip demo placeholder)
+    const stripeLocationId =
+      location.stripeLocationId && location.stripeLocationId !== 'demo-location'
+        ? location.stripeLocationId
+        : undefined;
+
     return this.stripe.createTerminalConnectionToken(
-      merchant.stripeAccountId,
-      location.stripeLocationId || undefined,
+      connectedAccountId,
+      stripeLocationId,
     );
   }
 

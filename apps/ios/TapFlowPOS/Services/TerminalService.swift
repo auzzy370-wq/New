@@ -233,6 +233,14 @@ extension TerminalService: TerminalDelegate {
 extension TerminalService: ConnectionTokenProvider {
     nonisolated func fetchConnectionToken(_ completion: @escaping ConnectionTokenCompletionBlock) {
         Task {
+            // Stripe Terminal ignores the token value in simulated mode —
+            // any non-empty string is accepted, so we skip the network call.
+            let simulated = await self.isSimulated()
+            if simulated {
+                completion("simulated-connection-token", nil)
+                return
+            }
+
             do {
                 let locId = await self.locationId ?? ""
                 let token = try await APIService.shared.getConnectionToken(locationId: locId)

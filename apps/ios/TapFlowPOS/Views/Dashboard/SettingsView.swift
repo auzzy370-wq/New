@@ -97,10 +97,34 @@ struct SettingsView: View {
                         .disabled(isConnectingTerminal)
                     }
 
-                    Toggle("Simulated Reader (Testing)", isOn: Binding(
+                    Toggle(isOn: Binding(
                         get: { UserDefaults.standard.bool(forKey: "tapflow_use_simulated_reader") },
-                        set: { UserDefaults.standard.set($0, forKey: "tapflow_use_simulated_reader") }
-                    ))
+                        set: {
+                            UserDefaults.standard.set($0, forKey: "tapflow_use_simulated_reader")
+                            // Disconnect so next payment reconnects with correct mode
+                            Task { try? await TerminalService.shared.disconnect() }
+                        }
+                    )) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Simulated Reader (Testing)")
+                                .font(.system(size: 15))
+                            Text("Enable to test payments without Stripe account setup")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    if !UserDefaults.standard.bool(forKey: "tapflow_use_simulated_reader"),
+                       authService.currentMerchant?.stripeChargesEnabled != true {
+                        Label {
+                            Text("Turn on Simulated Reader above to test payments, or complete Stripe Connect setup in the merchant dashboard.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } icon: {
+                            Image(systemName: "info.circle")
+                                .foregroundColor(.orange)
+                        }
+                    }
                 }
 
                 // Configuration
