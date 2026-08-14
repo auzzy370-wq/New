@@ -10,7 +10,7 @@ struct LoginView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showServerURL = false
-    @State private var serverURL = UserDefaults.standard.string(forKey: "tapflow_api_url") ?? "https://api.tapflow.app/api/v1"
+    @State private var serverURL = UserDefaults.standard.string(forKey: "tapflow_api_url") ?? "https://new-production-97c4.up.railway.app/api/v1"
 
     var body: some View {
         NavigationStack {
@@ -220,7 +220,7 @@ struct ServerURLSheet: View {
         NavigationStack {
             Form {
                 Section(header: Text("Backend API URL"), footer: Text("Enter the base URL of your TapFlow backend API, e.g. https://api.yourdomain.com/api/v1")) {
-                    TextField("https://api.tapflow.app/api/v1", text: $serverURL)
+                    TextField("https://new-production-97c4.up.railway.app/api/v1", text: $serverURL)
                         .keyboardType(.URL)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)

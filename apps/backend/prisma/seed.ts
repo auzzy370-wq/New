@@ -10,7 +10,7 @@ async function main() {
   const adminPasswordHash = await bcrypt.hash('Admin123!', 12);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@tapflow.app' },
-    update: {},
+    update: { passwordHash: adminPasswordHash },
     create: {
       email: 'admin@tapflow.app',
       passwordHash: adminPasswordHash,
@@ -26,7 +26,7 @@ async function main() {
   const ownerPasswordHash = await bcrypt.hash('Demo123!', 12);
   const owner = await prisma.user.upsert({
     where: { email: 'owner@demo-merchant.com' },
-    update: {},
+    update: { passwordHash: ownerPasswordHash },
     create: {
       email: 'owner@demo-merchant.com',
       passwordHash: ownerPasswordHash,

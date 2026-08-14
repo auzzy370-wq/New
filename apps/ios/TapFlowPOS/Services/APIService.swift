@@ -24,7 +24,7 @@ actor APIService {
     static let shared = APIService()
 
     private var baseURL: String {
-        UserDefaults.standard.string(forKey: "tapflow_api_url") ?? "https://api.tapflow.app/api/v1"
+        UserDefaults.standard.string(forKey: "tapflow_api_url") ?? "https://new-production-97c4.up.railway.app/api/v1"
     }
 
     private var merchantId: String? {
