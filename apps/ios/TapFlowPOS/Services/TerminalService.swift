@@ -34,7 +34,8 @@ final class TerminalService: NSObject, ObservableObject {
     @Published var isTapToPaySupported = false
 
     private var currentPaymentIntent: PaymentIntent?
-    private var collectTask: Task<PaymentIntent, Error>?
+    private var collectCancelable: Cancelable?
+    private var easyConnectCancelable: Cancelable?
     private var locationId: String?
 
     private override init() {
@@ -43,29 +44,23 @@ final class TerminalService: NSObject, ObservableObject {
 
     // Called after Terminal.initWithTokenProvider to check support
     func checkDeviceSupport() {
-        let result = Terminal.shared.supportsReaders(
-            of: .tapToPay,
-            discoveryMethod: .tapToPay,
-            simulated: false
-        )
-        if case .success = result {
-            isTapToPaySupported = true
+        do {
+            // DeviceType.appleBuiltIn = Tap to Pay on iPhone; DiscoveryMethod.tapToPay
+            let supported = try Terminal.shared.supportsReadersOfType(
+                .appleBuiltIn,
+                discoveryMethod: .tapToPay,
+                simulated: false
+            )
+            isTapToPaySupported = supported
+        } catch {
+            // Device or OS doesn't support Tap to Pay
+            isTapToPaySupported = false
         }
     }
 
     // MARK: - Connect (Tap to Pay on iPhone)
 
     func connectTapToPay(locationId: String) async throws {
-        let result = Terminal.shared.supportsReaders(
-            of: .tapToPay,
-            discoveryMethod: .tapToPay,
-            simulated: isSimulated()
-        )
-        guard case .success = result else {
-            throw NSError(domain: "TerminalService", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "This device does not support Tap to Pay on iPhone. Requires iPhone XS or later with iOS 16.4+."])
-        }
-
         self.locationId = locationId
         isConnecting = true
         connectionState = .connecting
@@ -84,8 +79,21 @@ final class TerminalService: NSObject, ObservableObject {
                 discoveryConfiguration: discoveryConfig,
                 connectionConfiguration: connectionConfig
             )
-            let reader = try await Terminal.shared.easyConnect(easyConfig)
-            connectionState = .connected(reader.serialNumber ?? "Tap to Pay")
+
+            let reader: Reader = try await withCheckedThrowingContinuation { continuation in
+                let cancelable = Terminal.shared.easyConnect(easyConfig) { reader, error in
+                    if let reader = reader {
+                        continuation.resume(returning: reader)
+                    } else {
+                        continuation.resume(throwing: error ?? NSError(
+                            domain: "TerminalService", code: 1,
+                            userInfo: [NSLocalizedDescriptionKey: "easyConnect failed"]))
+                    }
+                }
+                self.easyConnectCancelable = cancelable
+            }
+            easyConnectCancelable = nil
+            connectionState = .connected(reader.serialNumber)
         } catch {
             connectionState = .error(error.localizedDescription)
             throw error
@@ -116,33 +124,58 @@ final class TerminalService: NSObject, ObservableObject {
         paymentState = .collectingPayment
 
         do {
-            // Retrieve the payment intent
-            let intent = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<PaymentIntent, Error>) in
-                Terminal.shared.retrievePaymentIntent(clientSecret: paymentIntentClientSecret) { intent, error in
+            // Retrieve the PaymentIntent
+            let intent: PaymentIntent = try await withCheckedThrowingContinuation { continuation in
+                Terminal.shared.retrievePaymentIntent(
+                    clientSecret: paymentIntentClientSecret
+                ) { intent, error in
                     if let intent = intent {
                         continuation.resume(returning: intent)
                     } else {
-                        continuation.resume(throwing: error ?? NSError(domain: "Terminal", code: 0, userInfo: nil))
+                        continuation.resume(throwing: error ?? NSError(
+                            domain: "TerminalService", code: 2,
+                            userInfo: [NSLocalizedDescriptionKey: "retrievePaymentIntent failed"]))
                     }
                 }
             }
             currentPaymentIntent = intent
 
-            // Collect payment method (async)
+            // Collect payment method via callback
             let collectConfig = try CollectPaymentIntentConfigurationBuilder().build()
-            let collectTask = Task<PaymentIntent, Error> {
-                try await Terminal.shared.collectPaymentMethod(intent, collectConfig: collectConfig)
+            let collectedIntent: PaymentIntent = try await withCheckedThrowingContinuation { continuation in
+                let cancelable = Terminal.shared.collectPaymentMethod(
+                    intent,
+                    collectConfig: collectConfig
+                ) { [weak self] collectedIntent, error in
+                    self?.collectCancelable = nil
+                    if let collectedIntent = collectedIntent {
+                        continuation.resume(returning: collectedIntent)
+                    } else {
+                        continuation.resume(throwing: error ?? NSError(
+                            domain: "TerminalService", code: 3,
+                            userInfo: [NSLocalizedDescriptionKey: "collectPaymentMethod failed"]))
+                    }
+                }
+                self.collectCancelable = cancelable
             }
-            self.collectTask = collectTask
-            let collectedIntent = try await collectTask.value
 
-            // Confirm payment
+            // Confirm payment via callback
             paymentState = .processing
             let confirmConfig = try ConfirmPaymentIntentConfigurationBuilder().build()
-            let confirmedIntent = try await Terminal.shared.confirmPaymentIntent(
-                collectedIntent,
-                confirmConfig: confirmConfig
-            )
+            let confirmedIntent: PaymentIntent = try await withCheckedThrowingContinuation { continuation in
+                Terminal.shared.confirmPaymentIntent(
+                    collectedIntent,
+                    confirmConfig: confirmConfig
+                ) { confirmedIntent, error in
+                    if let confirmedIntent = confirmedIntent {
+                        continuation.resume(returning: confirmedIntent)
+                    } else {
+                        continuation.resume(throwing: error ?? NSError(
+                            domain: "TerminalService", code: 4,
+                            userInfo: [NSLocalizedDescriptionKey: "confirmPaymentIntent failed"]))
+                    }
+                }
+            }
 
             currentPaymentIntent = nil
             paymentState = .succeeded(stripePaymentIntentId)
@@ -156,8 +189,10 @@ final class TerminalService: NSObject, ObservableObject {
     // MARK: - Cancel
 
     func cancelCollection() {
-        collectTask?.cancel()
-        collectTask = nil
+        collectCancelable?.cancel()
+        collectCancelable = nil
+        easyConnectCancelable?.cancel()
+        easyConnectCancelable = nil
         paymentState = .cancelled
     }
 
