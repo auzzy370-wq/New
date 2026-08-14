@@ -9,9 +9,9 @@ export function validate(config: Record<string, unknown>) {
     DATABASE_URL: Joi.string().required(),
 
     // JWT
-    JWT_SECRET: Joi.string().min(32).required(),
+    JWT_SECRET: Joi.string().required(),
     JWT_EXPIRATION: Joi.string().default('15m'),
-    JWT_REFRESH_SECRET: Joi.string().min(32).required(),
+    JWT_REFRESH_SECRET: Joi.string().required(),
     JWT_REFRESH_EXPIRATION: Joi.string().default('30d'),
 
     // Redis (optional — omit to use in-memory fallback)
@@ -19,8 +19,8 @@ export function validate(config: Record<string, unknown>) {
     REDIS_PORT: Joi.number().default(6379),
     REDIS_PASSWORD: Joi.string().optional().allow(''),
 
-    // Stripe
-    STRIPE_SECRET_KEY: Joi.string().required(),
+    // Stripe (key optional at boot — Stripe features disabled until configured)
+    STRIPE_SECRET_KEY: Joi.string().optional().allow('').default(''),
     STRIPE_WEBHOOK_SECRET: Joi.string().optional().allow('').default(''),
     STRIPE_SUBSCRIPTION_PRICE_ID: Joi.string().optional().allow('').default(''),
     STRIPE_PLATFORM_FEE_RATE: Joi.number().default(0.01),

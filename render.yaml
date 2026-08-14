@@ -46,10 +46,10 @@ services:
       - key: EMAIL_FROM
         value: noreply@tapflow.app
 
-      # ── YOU MUST SET THESE in Render dashboard ────────────────
+      # ── Stripe (app starts without this; add real key to enable payments) ──
       # Get keys from: https://dashboard.stripe.com/apikeys
       - key: STRIPE_SECRET_KEY
-        sync: false          # <- you fill this in on Render
+        value: ""            # replace with your real sk_live_... or sk_test_...
 
       # Optional — needed for subscriptions & webhooks
       - key: STRIPE_WEBHOOK_SECRET

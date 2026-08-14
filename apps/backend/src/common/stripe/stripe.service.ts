@@ -5,13 +5,30 @@ import Stripe from 'stripe';
 @Injectable()
 export class StripeService {
   private readonly logger = new Logger(StripeService.name);
-  readonly client: Stripe;
+  private _client: Stripe | null = null;
 
   constructor(private configService: ConfigService) {
-    this.client = new Stripe(this.configService.get<string>('stripe.secretKey')!, {
-      apiVersion: '2024-04-10',
-      typescript: true,
-    });
+    const key = this.configService.get<string>('stripe.secretKey');
+    if (key) {
+      this._client = new Stripe(key, {
+        apiVersion: '2024-04-10',
+        typescript: true,
+      });
+      this.logger.log('Stripe client initialized');
+    } else {
+      this.logger.warn('STRIPE_SECRET_KEY not set — Stripe features disabled');
+    }
+  }
+
+  get client(): Stripe {
+    if (!this._client) {
+      throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY in your environment.');
+    }
+    return this._client;
+  }
+
+  get isConfigured(): boolean {
+    return this._client !== null;
   }
 
   // ── Connect ─────────────────────────────────────────────────────────────────
